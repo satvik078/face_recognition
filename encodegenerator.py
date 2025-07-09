@@ -4,7 +4,7 @@ import pickle
 import os
 
 # Importing student images
-folderPath = '/Users/satvikpandey/Downloads/project/face recognition/images'
+folderPath = '/Users/satvikpandey/Downloads/project/website (1)/face recognition/images'
 pathList = os.listdir(folderPath)
 print(pathList)
 imgList = []
