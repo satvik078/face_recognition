@@ -17,8 +17,17 @@ with open("/Users/satvikpandey/Downloads/project/website (1)/face recognition/En
 @app.route('/face-auth', methods=['POST'])
 def face_auth():
     data = request.get_json()
-    if not data or 'image' not in data:
-        return jsonify({'success': False, 'error': 'No image provided'}), 400
+    if not data or 'image' not in data or 'username' not in data:
+        return jsonify({'success': False, 'error': 'No image or username provided'}), 400
+
+    username = data['username'].strip()
+    # Find the index for the provided username
+    try:
+        idx = [id_.strip() for id_ in studentIds].index(username)
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Username not found in encodings'}), 200
+
+    known_encoding = encodeListKnown[idx]
 
     try:
         # Decode base64 image
@@ -34,16 +43,14 @@ def face_auth():
         if not face_encodings:
             return jsonify({'success': False, 'error': 'No face detected'}), 200
 
-        # Compare with known encodings
+        # Compare only to the known encoding for this username
         for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(encodeListKnown, face_encoding)
-            face_distances = face_recognition.face_distance(encodeListKnown, face_encoding)
-            best_match_index = np.argmin(face_distances)
-            if matches[best_match_index]:
-                name = studentIds[best_match_index]
-                return jsonify({'success': True, 'name': name}), 200
+            match = face_recognition.compare_faces([known_encoding], face_encoding)[0]
+            distance = face_recognition.face_distance([known_encoding], face_encoding)[0]
+            if match:
+                return jsonify({'success': True, 'name': username, 'distance': float(distance)}), 200
 
-        return jsonify({'success': False, 'error': 'Face not recognized'}), 200
+        return jsonify({'success': False, 'error': 'Face does not match the provided username'}), 200
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
